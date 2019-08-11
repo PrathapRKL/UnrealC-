@@ -22,6 +22,7 @@
 #include "TR_IncendiaryArrows.h"
 #include "TR_ExplosiveArrows.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "TR_Interactable_Base.h"
 
 // Sets default values
 APlayerChar::APlayerChar()
@@ -79,6 +80,8 @@ APlayerChar::APlayerChar()
 	FOnTimelineFloat PlayCamAnimation{};
 	PlayCamAnimation.BindUFunction(this, "TickCamTimeline");
 	CamTL.AddInterpFloat(CamCurve, PlayCamAnimation, FName{ TEXT("Camera Transition") });
+
+	Interactables = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -282,7 +285,36 @@ void APlayerChar::Sprint_End()
 
 void APlayerChar::Interact()
 {
+	if (bCanPickUp == true)
+	{
+		UWorld* const World = GetWorld();
+		if (World == nullptr)
+		{
+			return;
+		}
 
+		FVector StartLocation = GetActorLocation();
+		FVector EndLocation = GetActorLocation();
+		FQuat Rotation = GetActorRotation().Quaternion();
+		TArray<FHitResult> HitResults;
+		FCollisionShape MyCollisionSphere = FCollisionShape::MakeSphere(150.0f);
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		World->SweepMultiByChannel(HitResults, StartLocation, EndLocation, Rotation, ECC_WorldDynamic, MyCollisionSphere);
+
+		for (int i = 0; i < HitResults.Num(); i++)
+		{
+			class ATR_Interactable_Base* IItems = Cast<ATR_Interactable_Base>(HitResults[i].GetActor());
+
+			if (HitResults[i].GetActor() == IItems && IItems != nullptr)
+			{
+				PlayAnimMontage(PickUp_Montage);
+				Interactables = IItems;
+				Interactables->Interact();
+			}
+		}
+	}
 }
 
 void APlayerChar::ToggleArrows()
@@ -473,8 +505,6 @@ void APlayerChar::SetIdleState()
 {
 	CurrentPlayerState = uint8(EPlayerState::P_Idle);
 	FTimerHandle DelayHandle_Idle;
-	/*IsIdle = false;*/
-	/*GetWorld()->GetTimerManager().SetTimer(DelayHandle_Idle, this, &APlayerChar::PlayIdleAnim, 1.0f, 1.0f);*/
 }
 
 void APlayerChar::PlayIdleAnim()

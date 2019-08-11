@@ -21,6 +21,7 @@ class ATRArrows;
 class ATR_IncendiaryArrows;
 class ATR_ExplosiveArrows;
 class UTexture2D;
+class ATR_Interactable_Base;
 
 USTRUCT(BlueprintType)
 struct FSkillsData
@@ -168,6 +169,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bIsCharging = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bCanPickUp = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bCanInteract = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		ATR_Interactable_Base* Interactables;
+
 	float Delta;
 
 	/*
@@ -284,6 +294,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UAnimMontage* Idle_Montage3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UAnimMontage* PickUp_Montage;
 
 
 	/*

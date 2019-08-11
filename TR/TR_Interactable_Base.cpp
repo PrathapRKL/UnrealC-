@@ -50,6 +50,7 @@ void ATR_Interactable_Base::Use()
 
 void ATR_Interactable_Base::Interact()
 {
+	ItemCount += 1;
 	Destroy();
 }
 
@@ -59,6 +60,7 @@ void ATR_Interactable_Base::OnOverlapBegin(UPrimitiveComponent * OverlappedComp,
 	if (OtherActor == PlayerCharacter)
 	{
 		InteractWidget->SetHiddenInGame(false);
+		PlayerCharacter->bCanPickUp = true;
 	}
 }
 
@@ -68,6 +70,7 @@ void ATR_Interactable_Base::OnOverlapEnd(UPrimitiveComponent * OverlappedComp, A
 	if (OtherActor == PlayerCharacter)
 	{
 		InteractWidget->SetHiddenInGame(true);
+		PlayerCharacter->bCanPickUp = false;
 	}
 }
 

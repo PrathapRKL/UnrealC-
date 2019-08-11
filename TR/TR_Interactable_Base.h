@@ -44,7 +44,7 @@ public:
 		FString InteractableText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int ItemCount;
+		int32 ItemCount;
 
 protected:
 	// Called when the game starts or when spawned
