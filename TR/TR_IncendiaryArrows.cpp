@@ -29,7 +29,6 @@ ATR_IncendiaryArrows::ATR_IncendiaryArrows()
 
 	CollSP = CreateDefaultSubobject<USphereComponent>(TEXT("Hit Collision Sphere"));
 	CollSP->SetupAttachment(ArrowMesh);
-	CollSP->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 
 
 	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
@@ -45,7 +44,7 @@ void ATR_IncendiaryArrows::BeginPlay()
 	Super::BeginPlay();
 	
 	HitBox->OnComponentBeginOverlap.AddDynamic(this, &ATR_IncendiaryArrows::OnOverlapBegin);
-	CollSP->OnComponentHit.AddDynamic(this, &ATR_IncendiaryArrows::OnHit);
+	HitBox->OnComponentHit.AddDynamic(this, &ATR_IncendiaryArrows::OnHit);
 	HitBox->OnComponentEndOverlap.AddDynamic(this, &ATR_IncendiaryArrows::OnOverlapEnd);
 }
 
@@ -70,6 +69,5 @@ void ATR_IncendiaryArrows::OnHit(UPrimitiveComponent * HitComponent, AActor * Ot
 	APlayerChar* PlayerCharacter = Cast<APlayerChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	IgnoredActors.Add(PlayerCharacter);
 	UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), 100.0f, DamageType_Fire, IgnoredActors);
-	UGameplayStatics::SpawnEmitterAttached(FireArrowParticle, ArrowMesh, NAME_None, GetActorLocation(), GetActorRotation(), EAttachLocation::SnapToTarget, true);
 }
 

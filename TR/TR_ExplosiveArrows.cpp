@@ -29,7 +29,8 @@ ATR_ExplosiveArrows::ATR_ExplosiveArrows()
 
 	CollSP = CreateDefaultSubobject<USphereComponent>(TEXT("Hit Collision Sphere"));
 	CollSP->SetupAttachment(ArrowMesh);
-	CollSP->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	CollSP->SetGenerateOverlapEvents(true);
+	CollSP->SetNotifyRigidBodyCollision(true);
 
 
 	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
@@ -47,7 +48,7 @@ void ATR_ExplosiveArrows::BeginPlay()
 	Super::BeginPlay();
 	
 	HitBox->OnComponentBeginOverlap.AddDynamic(this, &ATR_ExplosiveArrows::OnOverlapBegin);
-	CollSP->OnComponentHit.AddDynamic(this, &ATR_ExplosiveArrows::OnHit);
+	HitBox->OnComponentHit.AddDynamic(this, &ATR_ExplosiveArrows::OnHit);
 	HitBox->OnComponentEndOverlap.AddDynamic(this, &ATR_ExplosiveArrows::OnOverlapEnd);
 }
 
@@ -72,6 +73,5 @@ void ATR_ExplosiveArrows::OnHit(UPrimitiveComponent * HitComponent, AActor * Oth
 	APlayerChar* PlayerCharacter = Cast<APlayerChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	IgnoredActors.Add(PlayerCharacter);
 	UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), 100.0f, DamageType_Exp, IgnoredActors);
-	UGameplayStatics::SpawnEmitterAttached(ExpArrowParticle, ArrowMesh, NAME_None, GetActorLocation(), GetActorRotation(), EAttachLocation::SnapToTarget, true);
 }
 

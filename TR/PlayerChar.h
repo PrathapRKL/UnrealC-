@@ -176,9 +176,16 @@ public:
 		bool bCanInteract = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bAutoFire = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ATR_Interactable_Base* Interactables;
 
 	float Delta;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ArrowSpeed = 0.0f;
+
 
 	/*
 	* vector<uint8> to store the enums.
@@ -217,6 +224,10 @@ protected:
 	AActor* IncendiaryArrow;
 	AActor* ExplosiveArrow;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UParticleSystem* PickUp_P;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -244,6 +255,12 @@ public:
 
 	UFUNCTION()
 		void Shoot();
+
+	UFUNCTION()
+		void Charging();
+
+	UFUNCTION()
+		void Shoot_Released();
 
 	UFUNCTION(BlueprintCallable)
 		void ComboAttack();
@@ -360,13 +377,14 @@ private:
 	UPROPERTY()
 		FSkillsData Skills;
 
+
 public:
 
 	/*
-	* Aim Camera Timeline.
+	* SpringArm Timeline.
 	*/
 
-	//Timneline Component to Play the Aim camera transition animation.
+	//Timeline Component to Play the modify spring arm transition animation.
 	UPROPERTY()
 		FTimeline CamTL;
 

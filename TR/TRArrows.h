@@ -35,6 +35,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UParticleSystem* Particle;
 
+	UPROPERTY()
+		TSubclassOf<UDamageType> DamageType_RegArrow;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Damage = 20.0f;
 

@@ -81,6 +81,7 @@ APlayerChar::APlayerChar()
 	PlayCamAnimation.BindUFunction(this, "TickCamTimeline");
 	CamTL.AddInterpFloat(CamCurve, PlayCamAnimation, FName{ TEXT("Camera Transition") });
 
+
 	Interactables = nullptr;
 }
 
@@ -143,6 +144,7 @@ void APlayerChar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Aim_Start", IE_Pressed, this, &APlayerChar::Aim_Start);
 	PlayerInputComponent->BindAction("Aim_Start", IE_Released, this, &APlayerChar::Aim_End);
 	PlayerInputComponent->BindAction("Shoot_Arrow", IE_Pressed, this, &APlayerChar::Shoot_Arrow);
+	PlayerInputComponent->BindAction("Shoot_Arrow", IE_Released, this, &APlayerChar::Shoot_Released);
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerChar::Sprint_Start);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerChar::Sprint_End);
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerChar::Interact);
@@ -226,11 +228,10 @@ void APlayerChar::Shoot_Arrow()
 		}
 		else
 		{
+			bIsCharging = true;
 			bIsAttacking = true;
-			PlayAnimMontage(Shoot_MontageP, 1.0f);
-			Shoot();
+			Charging();
 		}
-		OnPAttack(this);
 	}
 }
 
@@ -238,6 +239,33 @@ void APlayerChar::Shoot()
 {
 	SwitchOnArrowType();
 	Shoot_Implementation();
+	/*ChargedTL.PlayFromStart();*/
+
+}
+
+void APlayerChar::Charging()
+{
+	if (bIsCharging == true)
+	{
+		FTimerHandle ChargeHandle;
+		if (ArrowSpeed < 400)
+		{
+			ArrowSpeed += 20;
+			GetWorld()->GetTimerManager().SetTimer(ChargeHandle, this, &APlayerChar::Charging, 1.0f, false, 0.05f);
+		}
+	}
+}
+
+void APlayerChar::Shoot_Released()
+{
+	if (bIsAiming == true && ArrowCount > 0)
+	{
+		bIsCharging = false;
+		bIsAttacking = false;
+		PlayAnimMontage(Shoot_MontageP, 1.0f);
+		Shoot();
+		OnPAttack(this);
+	}
 }
 
 void APlayerChar::ComboAttack()
@@ -312,6 +340,7 @@ void APlayerChar::Interact()
 				PlayAnimMontage(PickUp_Montage);
 				Interactables = IItems;
 				Interactables->Interact();
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PickUp_P, Interactables->GetActorLocation());
 			}
 		}
 	}
@@ -435,7 +464,7 @@ void APlayerChar::SpawnFireArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 10000.0f;
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;
@@ -443,10 +472,12 @@ void APlayerChar::SpawnFireArrow()
 	IncendiaryArrow = World->SpawnActor<ATR_IncendiaryArrows>(Incen_Arrows, SpawnLocation, SpawnRotation, SpawnParams);
 	ATR_IncendiaryArrows* IncendiaryArrows = Cast<ATR_IncendiaryArrows>(IncendiaryArrow);
 	IncendiaryArrows->ProjectileMovement->bRotationFollowsVelocity = true;
+
 	if (bIsCharging == false)
 		IncendiaryArrows->ProjectileMovement->Velocity = ProjVelocity_R;
 	else
-		IncendiaryArrows->ProjectileMovement->Velocity = ProjVelocity_C;
+		IncendiaryArrows->ProjectileMovement->Velocity = ProjVelocity_R;
+	ArrowSpeed = 0.0f;
 }
 
 void APlayerChar::SpawnArrow()
@@ -461,7 +492,7 @@ void APlayerChar::SpawnArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 10000.0f;
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;
@@ -469,10 +500,12 @@ void APlayerChar::SpawnArrow()
 	RegularArrow = World->SpawnActor<ATRArrows>(Reg_Arrows, SpawnLocation, SpawnRotation, SpawnParams);
 	ATRArrows* RegularArrows = Cast<ATRArrows>(RegularArrow);
 	RegularArrows->ProjectileMovement->bRotationFollowsVelocity = true;
+
 	if (bIsCharging == false)
 		RegularArrows->ProjectileMovement->Velocity = ProjVelocity_R;
 	else
-		RegularArrows->ProjectileMovement->Velocity = ProjVelocity_C;
+		RegularArrows->ProjectileMovement->Velocity = ProjVelocity_R;
+	ArrowSpeed = 0.0f;
 }
 
 void APlayerChar::SpawnExpArrow()
@@ -487,7 +520,7 @@ void APlayerChar::SpawnExpArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 10000.0f;
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;
@@ -495,10 +528,12 @@ void APlayerChar::SpawnExpArrow()
 	ExplosiveArrow = World->SpawnActor<ATR_ExplosiveArrows>(Exp_Arrows, SpawnLocation, SpawnRotation, SpawnParams);
 	ATR_ExplosiveArrows* ExplosiveArrows = Cast<ATR_ExplosiveArrows>(ExplosiveArrow);
 	ExplosiveArrows->ProjectileMovement->bRotationFollowsVelocity = true;
+
 	if (bIsCharging == false)
 		ExplosiveArrows->ProjectileMovement->Velocity = ProjVelocity_R;
 	else
-		ExplosiveArrows->ProjectileMovement->Velocity = ProjVelocity_C;
+		ExplosiveArrows->ProjectileMovement->Velocity = ProjVelocity_R;
+	ArrowSpeed = 0.0f;
 }
 
 void APlayerChar::SetIdleState()
@@ -515,7 +550,6 @@ void APlayerChar::PlayIdleAnim()
 		{
 		case 0:
 			PlayAnimMontage(Idle_Montage1);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap success"));
 			break;
 		case 1:
 			PlayAnimMontage(Idle_Montage2);

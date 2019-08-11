@@ -29,7 +29,6 @@ ATRArrows::ATRArrows()
 
 	CollSP = CreateDefaultSubobject<USphereComponent>(TEXT("Hit Collision Sphere"));
 	CollSP->SetupAttachment(ArrowMesh);
-	CollSP->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 
 
 	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
@@ -68,6 +67,6 @@ void ATRArrows::OnOverlapEnd(UPrimitiveComponent * OwnerComp, AActor * OtherActo
 
 void ATRArrows::OnHit(UPrimitiveComponent * HitComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
 {
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Particle, GetActorTransform());
+	UGameplayStatics::ApplyDamage(OtherActor, Damage, this->GetInstigatorController(), this, DamageType_RegArrow);
 }
 
