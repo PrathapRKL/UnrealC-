@@ -12,6 +12,7 @@
 #include "TimerManager.h"
 #include "Engine/DataTable.h"
 #include<thread>
+#include<vector>
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
 #include "Classes/Camera/PlayerCameraManager.h"
@@ -23,6 +24,9 @@
 #include "TR_ExplosiveArrows.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "TR_Interactable_Base.h"
+#include "UserWidget.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Particles/ParticleSystem.h"
 
 // Sets default values
 APlayerChar::APlayerChar()
@@ -52,9 +56,14 @@ APlayerChar::APlayerChar()
 
 	HitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HitBox"));
 	HitBox->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "arrow_anchor");
-
-	Arrow_Direction = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow Dir"));
+	Arrow_Direction = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowDir"));
 	Arrow_Direction->SetupAttachment(HitBox);
+
+	FireArrowP = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("FArrowParticle"));
+	FireArrowP->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "arrow_anchor");
+	FireArrowP->SetHiddenInGame(true);
+	FireArrowP->bEditableWhenInherited = true;
+
 
 	//Timeline Component.
 	static ConstructorHelpers::FObjectFinder<UCurveFloat> AimCurve(TEXT("CurveFloat'/Game/Curves/Aim_Curve.Aim_Curve'"));
@@ -82,7 +91,8 @@ APlayerChar::APlayerChar()
 	CamTL.AddInterpFloat(CamCurve, PlayCamAnimation, FName{ TEXT("Camera Transition") });
 
 
-	Interactables = nullptr;
+	Interactables = nullptr;/*
+	CurrentWidget = nullptr;*/
 }
 
 // Called when the game starts or when spawned
@@ -205,6 +215,14 @@ void APlayerChar::Aim_Start()
 		GetCharacterMovement()->MaxWalkSpeed = 30.0f;
 		CurrentPlayerState = uint8(EPlayerState::P_Combat);
 		StopIdleAnim();
+		if (bIsFireArrowSelected == true)
+		{
+			FireArrowP->SetHiddenInGame(false);
+		}
+		else
+		{
+			FireArrowP->SetHiddenInGame(true);
+		}
 	}
 }
 
@@ -250,7 +268,7 @@ void APlayerChar::Charging()
 		FTimerHandle ChargeHandle;
 		if (ArrowSpeed < 400)
 		{
-			ArrowSpeed += 20;
+			ArrowSpeed += 10;
 			GetWorld()->GetTimerManager().SetTimer(ChargeHandle, this, &APlayerChar::Charging, 1.0f, false, 0.05f);
 		}
 	}
@@ -354,18 +372,41 @@ void APlayerChar::ToggleArrows()
 		{
 			SelectedArrow = val;
 			CurrentArrowType = 1;
+			bIsFireArrowSelected = false;
+			if (CurrentWidget != nullptr)
+				CurrentWidget->RemoveFromParent();
+			CurrentWidget = CreateWidget(GetWorld(), RegularArrow_Widget);
+			if (CurrentWidget != nullptr)
+				CurrentWidget->AddToViewport();
+			FireArrowP->SetHiddenInGame(true);
 			break;
 		}
 		if (CurrentArrowType == 1 && val == uint8(EArrowType::Incendiary_Arrows))
 		{
 			SelectedArrow = val;
 			CurrentArrowType = 2;
+			bIsFireArrowSelected = true;
+			if (bIsAiming == true)
+				FireArrowP->SetHiddenInGame(false);
+
+			if (CurrentWidget != nullptr)
+				CurrentWidget->RemoveFromParent();
+			CurrentWidget = CreateWidget(GetWorld(), IncendiaryArrow_Widget);
+			if (CurrentWidget != nullptr)
+				CurrentWidget->AddToViewport();
+			FireArrowP->SetHiddenInGame(true);
 			break;
 		}
 		if (CurrentArrowType == 2 && val == uint8(EArrowType::Explosive_Arrows))
 		{
 			SelectedArrow = val;
 			CurrentArrowType = 0;
+			bIsFireArrowSelected = false;
+			if (CurrentWidget != nullptr)
+				CurrentWidget->RemoveFromParent();
+			CurrentWidget = CreateWidget(GetWorld(), ExplosiveArrow_Widget);
+			if (CurrentWidget != nullptr)
+				CurrentWidget->AddToViewport();
 			break;
 		}
 	}
@@ -464,7 +505,7 @@ void APlayerChar::SpawnFireArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 500.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;
@@ -492,7 +533,7 @@ void APlayerChar::SpawnArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 500.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;
@@ -520,7 +561,7 @@ void APlayerChar::SpawnExpArrow()
 	FRotator SpawnRotation = HitBox->GetSocketRotation("arrow_anchor");
 	FActorSpawnParameters SpawnParams;
 	// Velocity of the arrow when the button is released immediately.
-	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 2000.0f * (ArrowSpeed);
+	FVector ProjVelocity_R = PlayerCamera->GetForwardVector() * 500.0f * (ArrowSpeed);
 	// Velocity of the arrow when the buttn is held down for some time and then released.
 	FVector ProjVelocity_C = PlayerCamera->GetForwardVector() * 250000.0f;
 	SpawnParams.Instigator = this;

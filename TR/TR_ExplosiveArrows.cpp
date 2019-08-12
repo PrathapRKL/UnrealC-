@@ -31,15 +31,6 @@ ATR_ExplosiveArrows::ATR_ExplosiveArrows()
 	CollSP->SetupAttachment(ArrowMesh);
 	CollSP->SetGenerateOverlapEvents(true);
 	CollSP->SetNotifyRigidBodyCollision(true);
-
-
-	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
-	ConstructorHelpers::FObjectFinder<UBlueprint> BP_Exp_Arrows(TEXT("Blueprint'/Game/BPs/BP_ExpArrow.BP_ExpArrow'"));
-	if (BP_Exp_Arrows.Object) {
-		BP_Class = (UClass*)BP_Exp_Arrows.Object->GeneratedClass;
-		/*APlayerChar* PlayerCharacter = Cast<APlayerChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-		PlayerCharacter->Exp_Arrows = BP_Class;*/
-	}
 }
 
 // Called when the game starts or when spawned

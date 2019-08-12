@@ -22,6 +22,8 @@ class ATR_IncendiaryArrows;
 class ATR_ExplosiveArrows;
 class UTexture2D;
 class ATR_Interactable_Base;
+class UUserWidget;
+class UParticleSystemComponent;
 
 USTRUCT(BlueprintType)
 struct FSkillsData
@@ -127,6 +129,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReaDWrite)
 		UArrowComponent* Arrow_Direction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UParticleSystemComponent* FireArrowP;
+
 	// Player Health.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Health = 100.0f * Defense;
@@ -184,6 +189,12 @@ public:
 	float Delta;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FVector FArr_Size;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FVector EArr_Size;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float ArrowSpeed = 0.0f;
 
 
@@ -194,9 +205,12 @@ public:
 	std::vector<uint8> ArrTypes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int CurrentArrowType;
+		int CurrentArrowType = 1;
 
 	uint8 SelectedArrow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bIsFireArrowSelected;
 
 	/*
 	* Current Player State.
@@ -206,6 +220,10 @@ public:
 		uint8 CurrentPlayerState;
 
 
+	/*
+	* Subclassof arrows to assign in blueprints.
+	*/
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ATRArrows> Reg_Arrows;
 
@@ -214,6 +232,22 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ATR_ExplosiveArrows> Exp_Arrows;
+
+
+	/*
+	* UUserWidgets to use/call when switching arrows.
+	*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UUserWidget> RegularArrow_Widget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UUserWidget> IncendiaryArrow_Widget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UUserWidget> ExplosiveArrow_Widget;
+
+	UUserWidget* CurrentWidget;
 
 
 protected:

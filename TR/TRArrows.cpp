@@ -29,15 +29,6 @@ ATRArrows::ATRArrows()
 
 	CollSP = CreateDefaultSubobject<USphereComponent>(TEXT("Hit Collision Sphere"));
 	CollSP->SetupAttachment(ArrowMesh);
-
-
-	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
-	ConstructorHelpers::FObjectFinder<UBlueprint> BP_Reg_Arrows(TEXT("Blueprint'/Game/BPs/BP_Arroes.BP_Arroes'"));
-	if (BP_Reg_Arrows.Object) {
-		BP_Class = (UClass*)BP_Reg_Arrows.Object->GeneratedClass;
-		/*APlayerChar* PlayerCharacter = Cast<APlayerChar>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-		PlayerCharacter->Reg_Arrows = BP_Class;*/
-	}
 }
 
 // Called when the game starts or when spawned

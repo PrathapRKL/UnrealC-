@@ -29,13 +29,6 @@ ATR_IncendiaryArrows::ATR_IncendiaryArrows()
 
 	CollSP = CreateDefaultSubobject<USphereComponent>(TEXT("Hit Collision Sphere"));
 	CollSP->SetupAttachment(ArrowMesh);
-
-
-	// Getting the blueprint version of the class and assigning it to a variable belonging to the PlayerChar class.
-	ConstructorHelpers::FObjectFinder<UBlueprint> BP_Incen_Arrows(TEXT("Blueprint'/Game/BPs/BP_FireArrow.BP_FireArrow'"));
-	if (BP_Incen_Arrows.Object) {
-		BP_Class = (UClass*)BP_Incen_Arrows.Object->GeneratedClass;
-	}
 }
 
 // Called when the game starts or when spawned
